@@ -100,12 +100,18 @@ public class DbUtil {
 
     }
 
-    public ArrayList<Appointment> getAppointments(int id) throws Exception {
+    public ArrayList<Appointment> getAppointments(int id, boolean isDoctor) throws Exception {
         ArrayList<Appointment> data = new ArrayList<Appointment>();
 
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection con= DriverManager.getConnection("jdbc:mysql://localhost:3306/HeathCareData?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC",un,pw);
-        String sql = "Select * from appointments where pid = "+id+" order by 4 desc";
+        String sql;
+        if(isDoctor) {
+            sql = "Select * from appointments where did = "+id+" order by 4 desc";
+        } else {
+            sql = "Select * from appointments where pid = "+id+" order by 4 desc";
+        }
+
         Statement stmt = con.createStatement();
         ResultSet rs = stmt.executeQuery(sql);
 
@@ -117,10 +123,10 @@ public class DbUtil {
 
     }
 
-    public void cancelAppoint(String aid) throws Exception {
+    public void updateAppointStatus(String aid,String status) throws Exception {
         Class.forName("com.mysql.cj.jdbc.Driver");
         Connection con= DriverManager.getConnection("jdbc:mysql://localhost:3306/HeathCareData?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC",un,pw);
-        String sql = "UPDATE appointments SET status = \'Cancel\' where appointment_id = \'" + aid + "\'";
+        String sql = "UPDATE appointments SET status = \'"+status+"\' where appointment_id = \'" + aid + "\'";
         System.out.println(sql);
         Statement stmt = con.createStatement();
         stmt.executeUpdate(sql);
@@ -177,4 +183,21 @@ public class DbUtil {
         return 1;
 
     }
+
+    public ArrayList<String> getPidPermissions(int did) throws Exception {
+        ArrayList<String> data = new ArrayList<String>();
+
+        Class.forName("com.mysql.cj.jdbc.Driver");
+        Connection con= DriverManager.getConnection("jdbc:mysql://localhost:3306/HeathCareData?allowPublicKeyRetrieval=true&useSSL=false&serverTimezone=UTC",un,pw);
+        String sql = "SELECT pid FROM permission where did = "+did;
+        Statement stmt = con.createStatement();
+        ResultSet rs = stmt.executeQuery(sql);
+        System.out.println(sql);
+        while(rs.next()) {
+            data.add(rs.getString("pid"));
+        }
+
+        return data;
+    }
+
 }

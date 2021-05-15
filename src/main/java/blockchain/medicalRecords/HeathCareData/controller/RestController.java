@@ -6,6 +6,9 @@ import blockchain.medicalRecords.HeathCareData.services.MyUserDetailsService;
 import blockchain.medicalRecords.HeathCareData.util.DbUtil;
 import blockchain.medicalRecords.HeathCareData.util.JwtUtil;
 import blockchain.medicalRecords.HeathCareData.util.MiscUtil;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.stereotype.Controller;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,6 +55,39 @@ public class RestController {
     @Autowired
     private RestTemplate restTemplate;
 
+    //... Helper functions
+
+    void MenuDetails(HttpServletRequest req, Model theModel) throws Exception {
+        Cookie[] cookies = req.getCookies();
+        ArrayList<ArrayList<String>> ops;
+
+        if(cookies != null) {
+            for(Cookie c : cookies) {
+                if(c.getName().equals("abcHospitalAppUser")) {
+                    theModel.addAttribute("userName", c.getValue());
+                    //Get the details to be displayed on userProfile
+                    User_details curr = dbUtil.getUserDetails(c.getValue());
+                    theModel.addAttribute("user_details", curr);
+                } else if(c.getName().equals("abcHospitalAppUserType")) {
+                    ops = miscUtil.getMenu(c.getValue());
+                    theModel.addAttribute("ops", ops);
+                }
+            }
+        }
+    }
+
+    void AppointmentDetails(int user_id, Model theModel, boolean isDoctor) throws Exception {
+        ArrayList<Appointment> data = dbUtil.getAppointments(user_id, isDoctor);
+        theModel.addAttribute("appointmentDetails", data);
+    }
+
+    void PermissionsGiven(int user_id, Model theModel) throws Exception {
+        ArrayList<User_details> data = dbUtil.getDoctorPermissions(user_id);
+        theModel.addAttribute("givenPermissions", data);
+    }
+
+    //...
+
     @GetMapping("/login")
     public String login(Model theModel) {
         return "login";
@@ -64,12 +100,6 @@ public class RestController {
 
     @PostMapping("/register")
     public String registerNew(HttpServletRequest req, Model theModel) {
-        System.out.println(req.getParameter("first_name"));
-        System.out.println(req.getParameter("last_name"));
-        System.out.println(req.getParameter("user_name"));
-        System.out.println(req.getParameter("email_id"));
-        System.out.println(req.getParameter("user_type"));
-        System.out.println(req.getParameter("password"));
 
         User_details curr = new User_details(0
                 , req.getParameter("first_name")
@@ -108,26 +138,6 @@ public class RestController {
 
         return "userProfile";
     }
-
-    void MenuDetails(HttpServletRequest req, Model theModel) throws Exception {
-        Cookie[] cookies = req.getCookies();
-        ArrayList<ArrayList<String>> ops;
-
-        if(cookies != null) {
-            for(Cookie c : cookies) {
-                if(c.getName().equals("abcHospitalAppUser")) {
-                    theModel.addAttribute("userName", c.getValue());
-                    //Get the details to be displayed on userProfile
-                    User_details curr = dbUtil.getUserDetails(c.getValue());
-                    theModel.addAttribute("user_details", curr);
-                } else if(c.getName().equals("abcHospitalAppUserType")) {
-                    ops = miscUtil.getMenu(c.getValue());
-                    theModel.addAttribute("ops", ops);
-                }
-            }
-        }
-    }
-
 
 
     @GetMapping("/viewPatientData")
@@ -191,30 +201,33 @@ public class RestController {
             return "bookDoctor";
         }
 
-        AppointmentDetails(temp.getUser_id(),theModel);
+        AppointmentDetails(temp.getUser_id(),theModel, temp.getUser_type().equals("doctor") ? true : false);
 
         return "viewPatientAppointment";
     }
 
-    void AppointmentDetails(int user_id, Model theModel) throws Exception {
-        ArrayList<Appointment> data = dbUtil.getAppointments(user_id);
-        theModel.addAttribute("appointmentDetails", data);
-    }
 
     @GetMapping("/viewAppointments")
     public String viewPatientAppointmentPage(HttpServletRequest req, Model theModel) throws Exception {
         MenuDetails(req, theModel);
         User_details temp = (User_details) theModel.getAttribute("user_details");
-        AppointmentDetails(temp.getUser_id(),theModel);
-        return "viewPatientAppointment";
+        AppointmentDetails(temp.getUser_id(),theModel, temp.getUser_type().equals("doctor") ? true : false);
+
+        if(temp.getUser_type().equals("doctor")) {
+            return "viewDoctorAppointment";
+        } else {
+            return "viewPatientAppointment";
+        }
+
+
     }
 
     @GetMapping("/cancelAppointment")
     public String cancelAppointment(HttpServletRequest req, Model theModel) throws Exception {
         MenuDetails(req, theModel);
         User_details temp = (User_details) theModel.getAttribute("user_details");
-        dbUtil.cancelAppoint(req.getParameter("aid"));
-        AppointmentDetails(temp.getUser_id(),theModel);
+        dbUtil.updateAppointStatus(req.getParameter("aid"),"Cancel");
+        AppointmentDetails(temp.getUser_id(),theModel, temp.getUser_type().equals("doctor") ? true : false);
         return "viewPatientAppointment";
     }
 
@@ -237,11 +250,6 @@ public class RestController {
         return "doctorPermissions";
     }
 
-    void PermissionsGiven(int user_id, Model theModel) throws Exception {
-        ArrayList<User_details> data = dbUtil.getDoctorPermissions(user_id);
-        theModel.addAttribute("givenPermissions", data);
-    }
-
     @GetMapping("/revokePermission")
     public String revokePermissionAction(HttpServletRequest req, Model theModel) throws Exception {
         MenuDetails(req, theModel);
@@ -253,6 +261,158 @@ public class RestController {
 
 
     //...
+
+    //... Doctor APIS
+
+    @GetMapping("/prescribe")
+    public String prescribeMethod(HttpServletRequest req, Model theModel) throws Exception {
+        MenuDetails(req, theModel);
+        User_details curr = (User_details)theModel.getAttribute("user_details");
+
+        String targetNode = dbUtil.getAvailableIp();
+
+        String uri = "http://"+targetNode+"/record/id/"+ req.getParameter("pid");
+        String result = restTemplate.getForObject(uri, String.class);
+
+        JSONObject responseData = new JSONObject(result);
+        JSONObject medicalHistory = responseData.getJSONObject("medicalHistory");
+        JSONArray records = medicalHistory.getJSONArray("Records");
+
+        ArrayList<Record_data> data = new ArrayList<Record_data>();
+
+        for (int i=records.length()-1; i >= 0; i--) {
+            data.add(new Record_data(records.getJSONObject(i).getString("doctor")
+                    , records.getJSONObject(i).getString("patient")
+                    , records.getJSONObject(i).getString("description")
+                    , records.getJSONObject(i).getString("prescription")
+                    , records.getJSONObject(i).getString("RecordId"))
+            );
+        }
+
+        theModel.addAttribute("blockchain_data",data);
+        theModel.addAttribute("appointment_id",req.getParameter("aid"));
+        theModel.addAttribute("patient_id",req.getParameter("pid"));
+        theModel.addAttribute("nodeUrl","http://"+targetNode);
+
+        return "prescribe";
+    }
+
+    @PostMapping("/prescribe")
+    public String newPrescribe(HttpServletRequest req, Model theModel) throws Exception {
+
+        MenuDetails(req, theModel);
+        User_details temp = (User_details) theModel.getAttribute("user_details");
+        AppointmentDetails(temp.getUser_id(),theModel, temp.getUser_type().equals("doctor") ? true : false);
+
+        // update db
+        System.out.println(req.getParameter(("aid")));
+        dbUtil.updateAppointStatus(req.getParameter(("aid")),"Prescribed");
+        // insert in blockchain
+        String targetNode = dbUtil.getAvailableIp();
+        String uri = "http://"+targetNode+"/record/broadcast";
+
+        JSONObject bodyParams = new JSONObject();
+        bodyParams.put("doctor",String.valueOf(temp.getUser_id()));
+        bodyParams.put("patient",req.getParameter("pid"));
+        bodyParams.put("description",req.getParameter("description"));
+        bodyParams.put("prescription",req.getParameter("prescription"));
+
+        String requestJson = bodyParams.toString();
+        System.out.println(requestJson);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+
+        HttpEntity<String> entity = new HttpEntity<String>(requestJson,headers);
+        String answer = restTemplate.postForObject(uri, entity, String.class);
+        System.out.println(answer);
+        if(temp.getUser_type().equals("doctor")) {
+            return "viewDoctorAppointment";
+        } else {
+            return "viewPatientAppointment";
+        }
+
+
+    }
+
+    @GetMapping("/viewDoctorPastRecords")
+    public String viewDoctorPastRecords(HttpServletRequest req, Model theModel) throws Exception {
+        MenuDetails(req, theModel);
+        User_details curr = (User_details)theModel.getAttribute("user_details");
+
+        String targetNode = dbUtil.getAvailableIp();
+
+        String uri = "http://"+targetNode+"/record/id/"+ String.valueOf(curr.getUser_id());
+        String result = restTemplate.getForObject(uri, String.class);
+
+        JSONObject responseData = new JSONObject(result);
+        JSONObject medicalHistory = responseData.getJSONObject("medicalHistory");
+        JSONArray records = medicalHistory.getJSONArray("Records");
+
+        ArrayList<Record_data> data = new ArrayList<Record_data>();
+
+        for (int i=0; i < records.length(); i++) {
+            data.add(new Record_data(records.getJSONObject(i).getString("doctor")
+                    , records.getJSONObject(i).getString("patient")
+                    , records.getJSONObject(i).getString("description")
+                    , records.getJSONObject(i).getString("prescription")
+                    , records.getJSONObject(i).getString("RecordId"))
+            );
+        }
+
+        theModel.addAttribute("blockchain_data",data);
+        theModel.addAttribute("nodeUrl","http://"+targetNode);
+
+        return "viewDoctorRecords";
+
+    }
+
+    @GetMapping("viewPatientDataDoc")
+    public String viewPatientDataDoc(HttpServletRequest req, Model theModel) throws Exception {
+        MenuDetails(req, theModel);
+        User_details curr = (User_details)theModel.getAttribute("user_details");
+
+        ArrayList<String> pids = dbUtil.getPidPermissions(curr.getUser_id());
+
+        theModel.addAttribute("patient_ids", pids);
+
+        return "viewPatientDataDoc";
+    }
+
+    @GetMapping("getPatientData")
+    public String getPatientDataDocSide(HttpServletRequest req, Model theModel) throws Exception {
+        MenuDetails(req, theModel);
+        User_details curr = (User_details)theModel.getAttribute("user_details");
+
+        String targetNode = dbUtil.getAvailableIp();
+
+        String uri = "http://"+targetNode+"/record/id/"+ req.getParameter("pid");
+        String result = restTemplate.getForObject(uri, String.class);
+
+        JSONObject responseData = new JSONObject(result);
+        JSONObject medicalHistory = responseData.getJSONObject("medicalHistory");
+        JSONArray records = medicalHistory.getJSONArray("Records");
+
+        ArrayList<Record_data> data = new ArrayList<Record_data>();
+
+        for (int i=0; i < records.length(); i++) {
+            data.add(new Record_data(records.getJSONObject(i).getString("doctor")
+                    , records.getJSONObject(i).getString("patient")
+                    , records.getJSONObject(i).getString("description")
+                    , records.getJSONObject(i).getString("prescription")
+                    , records.getJSONObject(i).getString("RecordId"))
+            );
+        }
+
+        theModel.addAttribute("blockchain_data",data);
+        theModel.addAttribute("patient_id",req.getParameter("pid"));
+        theModel.addAttribute("nodeUrl","http://"+targetNode);
+
+
+        return "getPatientDataDoc";
+    }
+
+    //...
+
 
     @RequestMapping(value = "/authenticate", method = RequestMethod.POST)
     public ResponseEntity<?> createAuthenticationToken(@RequestBody AuthenticationRequest authReq) throws Exception {

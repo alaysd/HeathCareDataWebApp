@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Appointments</title>
+    <title>Prescribe</title>
 
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
     <link rel="stylesheet" href="plugins/fontawesome-free/css/all.min.css">
@@ -75,7 +75,7 @@
             <div class="container-fluid">
                 <div class="row mb-2">
                     <div class="col-sm-6">
-                        <h1 class="m-0">Appointments</h1>
+                        <h1 class="m-0">Prescribe <h2 th:text="${appointment_id}"></h2> </h1>
                     </div><!-- /.col -->
                     <div class="col-sm-6">
 
@@ -96,40 +96,53 @@
                         </div>
                         <!-- /.card-header -->
                         <div class="card-body table-responsive p-0">
+
+                            <form action="/prescribe" method="post">
+                                <input type="hidden" th:value="${appointment_id}" name="aid"/>
+                                <input type="hidden" th:value="${patient_id}" name="pid"/>
+                                <div class="card-body">
+                                    <div class="form-group">
+                                        <label for="description">Description</label>
+                                        <textarea class="form-control" id="description" name = "description" placeholder="Description"></textarea>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="prescription">Prescription</label>
+                                        <textarea class="form-control" id="prescription" name = "prescription" placeholder="Prescription"></textarea>
+                                    </div>
+                                </div>
+                                <!-- /.card-body -->
+
+                                <div class="card-footer">
+                                    <button type="submit" class="btn btn-primary">Submit</button>
+                                </div>
+                            </form>
+
                             <table class="table table-hover text-nowrap">
                                 <thead>
                                 <tr>
-                                    <th>Appointment ID</th>
-                                    <th>Patient ID</th>
                                     <th>Doctor ID</th>
-                                    <th>Date</th>
-                                    <th>Status</th>
+                                    <th>Patient ID</th>
                                     <th>Description</th>
-                                    <th>Action</th>
+                                    <th>Prescription</th>
+                                    <th>Record ID</th>
+                                    <th>Verify in blockchain</th>
                                 </tr>
 
                                 </thead>
                                 <tbody>
-                                <th:block th:each="row : ${appointmentDetails}">
+                                <th:block th:each="row : ${blockchain_data}">
                                     <tr>
-                                        <td th:text="${row.getAppointment_id()}"></td>
-                                        <td th:text="${row.getPid()}"></td>
-                                        <td th:text="${row.getDid()}"></td>
-                                        <td th:text="${row.getDateAndTime()}"></td>
-                                        <td th:text="${row.getStatus()}"></td>
+                                        <td th:text="${row.getDoctor()}"></td>
+                                        <td th:text="${row.getPatient()}"></td>
                                         <td th:text="${row.getDescription()}"></td>
+                                        <td th:text="${row.getPrescription()}"></td>
+                                        <td th:text="${row.getRecordId()}"></td>
                                         <td>
+
                                             <script th:inline="javascript">
-
-                                                var isActive = [[${row.getStatus()}]] == 'Active' ? true : false;
-
-                                                if(isActive) {
-                                                    var loc = "/cancelAppointment?aid=" + [[${row.getAppointment_id()}]];
-                                                    document.write('<a href = "'+loc+'"><button type="button">Cancel</button></a>');
-                                                } else {
-                                                    document.write('<a href = ""><button type="button" disabled>Cancel</button></a>');
-                                                }
-
+                                                var loc = [[${nodeUrl}]] + '/record/id/' + [[${row.getRecordId()}]];
+                                                console.log(loc);
+                                                document.write('<a href="' + loc + '" target="_blank">Verify</a>');
                                             </script>
 
                                         </td>

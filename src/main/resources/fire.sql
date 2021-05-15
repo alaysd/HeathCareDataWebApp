@@ -1,6 +1,6 @@
 CREATE DATABASE HeathCareData;
 
-use HeathCareData
+use HeathCareData;
 
 create table user_details (
     user_id int NOT NULL AUTO_INCREMENT,

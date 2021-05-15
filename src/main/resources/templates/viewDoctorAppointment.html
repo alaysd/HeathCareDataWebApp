@@ -124,10 +124,11 @@
                                                 var isActive = [[${row.getStatus()}]] == 'Active' ? true : false;
 
                                                 if(isActive) {
-                                                    var loc = "/cancelAppointment?aid=" + [[${row.getAppointment_id()}]];
-                                                    document.write('<a href = "'+loc+'"><button type="button">Cancel</button></a>');
+                                                    var loc1 = "/cancelAppointment?aid=" + [[${row.getAppointment_id()}]];
+                                                    var loc2 = "/prescribe?aid=" + [[${row.getAppointment_id()}]] + "&pid=" + [[${row.getPid()}]];
+                                                    document.write('<a href = "'+loc1+'"><button type="button">Cancel</button></a><a href = "'+loc2+'"><button type="button">Prescribe</button></a>');
                                                 } else {
-                                                    document.write('<a href = ""><button type="button" disabled>Cancel</button></a>');
+                                                    document.write('<a href = ""><button type="button" disabled>Cancel</button></a><a href = ""><button type="button" disabled>Prescribe</button></a>');
                                                 }
 
                                             </script>
