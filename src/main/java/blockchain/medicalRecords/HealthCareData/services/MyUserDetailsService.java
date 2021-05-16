@@ -28,7 +28,9 @@ public class MyUserDetailsService implements UserDetailsService {
             Statement stmt = con.createStatement();
             ResultSet rs = stmt.executeQuery(sql);
             rs.next();
-            return new User(userName, rs.getString("password"), new ArrayList<>());
+            String pass_word = rs.getString("password");
+            con.close();
+            return new User(userName, pass_word, new ArrayList<>());
         } catch (Exception e) {
             System.out.println("loadUserByUsername exception " + e);
             return null;
