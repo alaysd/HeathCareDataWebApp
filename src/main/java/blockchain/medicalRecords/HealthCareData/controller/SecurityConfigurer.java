@@ -1,4 +1,4 @@
-package blockchain.medicalRecords.HeathCareData.controller;
+package blockchain.medicalRecords.HealthCareData.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
@@ -11,8 +11,8 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import blockchain.medicalRecords.HeathCareData.filters.JwtRequestFilter;
-import blockchain.medicalRecords.HeathCareData.services.MyUserDetailsService;
+import blockchain.medicalRecords.HealthCareData.filters.JwtRequestFilter;
+import blockchain.medicalRecords.HealthCareData.services.MyUserDetailsService;
 
 @EnableWebSecurity
 public class SecurityConfigurer extends WebSecurityConfigurerAdapter {

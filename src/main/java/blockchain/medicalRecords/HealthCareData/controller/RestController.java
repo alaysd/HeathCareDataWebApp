@@ -1,11 +1,11 @@
-package blockchain.medicalRecords.HeathCareData.controller;
+package blockchain.medicalRecords.HealthCareData.controller;
 
 
-import blockchain.medicalRecords.HeathCareData.model.*;
-import blockchain.medicalRecords.HeathCareData.services.MyUserDetailsService;
-import blockchain.medicalRecords.HeathCareData.util.DbUtil;
-import blockchain.medicalRecords.HeathCareData.util.JwtUtil;
-import blockchain.medicalRecords.HeathCareData.util.MiscUtil;
+import blockchain.medicalRecords.HealthCareData.model.*;
+import blockchain.medicalRecords.HealthCareData.services.MyUserDetailsService;
+import blockchain.medicalRecords.HealthCareData.util.DbUtil;
+import blockchain.medicalRecords.HealthCareData.util.JwtUtil;
+import blockchain.medicalRecords.HealthCareData.util.MiscUtil;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
@@ -148,7 +148,7 @@ public class RestController {
 
         String targetNode = dbUtil.getAvailableIp();
 
-        String uri = "http://"+targetNode+"/record/id/"+ String.valueOf(curr.getUser_id());
+        String uri = "http://"+targetNode+"/get-history/id/"+ String.valueOf(curr.getUser_id());
         String result = restTemplate.getForObject(uri, String.class);
 
         JSONObject responseData = new JSONObject(result);
@@ -176,7 +176,8 @@ public class RestController {
     @GetMapping("/bookDoctor")
     public String bookDoctor(HttpServletRequest req, Model theModel) throws Exception {
         MenuDetails(req, theModel);
-
+        ArrayList<User_details> availableDoctors = dbUtil.getDoctors();
+        theModel.addAttribute("availableDoctors",availableDoctors);
         return "bookDoctor";
     }
 
@@ -271,7 +272,7 @@ public class RestController {
 
         String targetNode = dbUtil.getAvailableIp();
 
-        String uri = "http://"+targetNode+"/record/id/"+ req.getParameter("pid");
+        String uri = "http://"+targetNode+"/get-history/id/"+ req.getParameter("pid");
         String result = restTemplate.getForObject(uri, String.class);
 
         JSONObject responseData = new JSONObject(result);
@@ -341,7 +342,7 @@ public class RestController {
 
         String targetNode = dbUtil.getAvailableIp();
 
-        String uri = "http://"+targetNode+"/record/id/"+ String.valueOf(curr.getUser_id());
+        String uri = "http://"+targetNode+"/get-history/id/"+ String.valueOf(curr.getUser_id());
         String result = restTemplate.getForObject(uri, String.class);
 
         JSONObject responseData = new JSONObject(result);
@@ -385,7 +386,7 @@ public class RestController {
 
         String targetNode = dbUtil.getAvailableIp();
 
-        String uri = "http://"+targetNode+"/record/id/"+ req.getParameter("pid");
+        String uri = "http://"+targetNode+"/get-history/id/"+ req.getParameter("pid");
         String result = restTemplate.getForObject(uri, String.class);
 
         JSONObject responseData = new JSONObject(result);

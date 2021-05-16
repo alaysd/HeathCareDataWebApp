@@ -1,4 +1,4 @@
-package blockchain.medicalRecords.HeathCareData.model;
+package blockchain.medicalRecords.HealthCareData.model;
 
 public class AuthenticationResponse {
     private final String jwt;

@@ -1,4 +1,4 @@
-package blockchain.medicalRecords.HeathCareData.filters;
+package blockchain.medicalRecords.HealthCareData.filters;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -7,8 +7,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
-import blockchain.medicalRecords.HeathCareData.util.JwtUtil;
-import blockchain.medicalRecords.HeathCareData.services.MyUserDetailsService;
+import blockchain.medicalRecords.HealthCareData.util.JwtUtil;
+import blockchain.medicalRecords.HealthCareData.services.MyUserDetailsService;
 
 import javax.servlet.FilterChain;
 import javax.servlet.ServletException;

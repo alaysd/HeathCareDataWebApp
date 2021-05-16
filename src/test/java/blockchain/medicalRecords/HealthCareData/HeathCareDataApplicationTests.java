@@ -1,10 +1,10 @@
-package blockchain.medicalRecords.HeathCareData;
+package blockchain.medicalRecords.HealthCareData;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class HeathCareDataApplicationTests {
+class HealthCareDataApplicationTests {
 
 	@Test
 	void contextLoads() {

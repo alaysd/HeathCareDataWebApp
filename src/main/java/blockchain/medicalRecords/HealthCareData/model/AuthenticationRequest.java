@@ -1,4 +1,4 @@
-package blockchain.medicalRecords.HeathCareData.model;
+package blockchain.medicalRecords.HealthCareData.model;
 
 public class AuthenticationRequest {
     private String username;

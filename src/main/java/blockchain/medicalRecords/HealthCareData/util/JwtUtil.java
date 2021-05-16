@@ -1,4 +1,4 @@
-package blockchain.medicalRecords.HeathCareData.util;
+package blockchain.medicalRecords.HealthCareData.util;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;

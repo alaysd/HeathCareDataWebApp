@@ -9,12 +9,12 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>blockchain.medicalRecords</groupId>
-	<artifactId>HeathCareData</artifactId>
+	<artifactId>HealthCareData</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>HeathCareData</name>
+	<name>HealthCareData</name>
 	<description>Project which uses blockchain apis. Made by Akshil and Alay</description>
 	<properties>
-		<java.version>11</java.version>
+		<java.version>8</java.version>
 	</properties>
 	<dependencies>
 		<dependency>
@@ -77,6 +77,15 @@
 			<groupId>org.json</groupId>
 			<artifactId>json</artifactId>
 			<version>20160810</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-jdbc</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.mybatis</groupId>
+			<artifactId>mybatis</artifactId>
+			<version>3.4.5</version>
 		</dependency>
 	</dependencies>
 
